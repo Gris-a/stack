@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "stack.h"
+#include "../include/stack.h"
 
 int stack_ctor(struct Stack *stack, const size_t capacity)
 {

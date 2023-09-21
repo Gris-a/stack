@@ -1,9 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "stack.h"
+#include "../include/stack.h"
 
-int main(void)
+int main(int argc, const char *argv[])
 {
     struct Stack stack = {};
     stack_ctor(&stack, 10);
