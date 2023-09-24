@@ -11,6 +11,7 @@ int stack_ctor(struct Stack *stack, const size_t capacity)
     if(capacity == 0)
     {
         fprintf(LOG_FILE, "%s: In %s: error: Capasity should be greater than zero.\n", __FILE__, __PRETTY_FUNCTION__);
+
         return EINVAL;
     }
 
@@ -119,20 +120,27 @@ int optimal_expansion(struct Stack *stack)
 
     if(stack->size == stack->capacity)
     {
-        stack->data = (elem_t *)((canary_t *)realloc(((canary_t *)stack->data) - 1,
-                                                                sizeof(elem_t) * (stack->capacity *= 2) + 2 * sizeof(canary_t)) + 1);
+        elem_t *temp_ptr = (elem_t *)((canary_t *)realloc(((canary_t *)stack->data) - 1,
+                                                            sizeof(elem_t) * (stack->capacity *= 2) + 2 * sizeof(canary_t)) + 1);
+        if(!temp_ptr)
+        {
+            fprintf(LOG_FILE, "Error: unable to reallocate memory.\n"
+                              "%s: In function %s:%d\n", __FILE__, __PRETTY_FUNCTION__, __LINE__ - 5);
+            return ENOMEM;
+        }
+
+        stack->data = temp_ptr;
+
+        for(size_t i = stack->size; i < stack->capacity; i++)
+        {
+            stack->data[i] = 0;
+        }
+
+        *(canary_t *)(stack->data + stack->capacity) = CANARY_VAL;
     }
 
-    STACK_VERIFICATION(stack, ENOMEM, "Error: unable to reallocate memory.\n"
-                                      "%s: In function %s:%d\n", __FILE__, __PRETTY_FUNCTION__, __LINE__ - 5);
-
-    for(size_t i = stack->size; i < stack->capacity; i++)
-    {
-        stack->data[i] = 0;
-    }
-
-    *(canary_t *)(stack->data + stack->capacity) = CANARY_VAL;
-
+    STACK_VERIFICATION(stack, EINVAL, "Error: invalid stack.\n"
+                                      "%s: In function %s:%d\n", __FILE__, __PRETTY_FUNCTION__, __LINE__ - 1);
     STACK_DATA_VERIFICATION(stack);
 
     return EXIT_SUCCESS;
@@ -146,15 +154,22 @@ int optimal_shrink(struct Stack *stack)
 
     if(stack->size * 4 == stack->capacity)
     {
-        stack->data = (elem_t *)((canary_t *)realloc(((canary_t *)stack->data) - 1,
-                                                                sizeof(elem_t) * (stack->capacity /= 2) + 2 * sizeof(canary_t)) + 1);
+        elem_t *temp_ptr = (elem_t *)((canary_t *)realloc(((canary_t *)stack->data) - 1,
+                                                            sizeof(elem_t) * (stack->capacity /= 2) + 2 * sizeof(canary_t)) + 1);
+        if(!temp_ptr)
+        {
+            fprintf(LOG_FILE, "Error: unable to reallocate memory.\n"
+                              "%s: In function %s:%d\n", __FILE__, __PRETTY_FUNCTION__, __LINE__ - 5);
+            return ENOMEM;
+        }
+
+        stack->data = temp_ptr;
+
+        *(canary_t *)(stack->data + stack->capacity) = CANARY_VAL;
     }
 
     STACK_VERIFICATION(stack, ENOMEM, "Error: unable to reallocate memory.\n"
                                       "%s: In function %s:%d\n", __FILE__, __PRETTY_FUNCTION__, __LINE__ - 5);
-
-    *(canary_t *)(stack->data + stack->capacity) = CANARY_VAL;
-
     STACK_DATA_VERIFICATION(stack);
 
     return EXIT_SUCCESS;
@@ -178,6 +193,8 @@ void stack_validation(struct Stack *stack)
 
 void stack_data_validation(struct Stack *stack) //TODO
 {
+    assert(stack);
+
     if(((canary_t *)stack->data)[-1] != CANARY_VAL || *(canary_t *)(stack->data + stack->capacity) != CANARY_VAL)
     {
         stack->err.invalid = true;
