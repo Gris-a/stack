@@ -15,33 +15,48 @@
                                                                   return err_code; \
                                                                  }
 
+#define STACK_DATA_VERIFICATION(stack_ptr) stack_data_validation(stack); \
+                                                if(stack->err.invalid) \
+                                                { \
+                                                    printf("%s: In %s:%d: error: Corrupted stack data.\n", __FILE__, __PRETTY_FUNCTION__, __LINE__); \
+                                                    return EINVAL; \
+                                                }
+
 #else
 
 #define STACK_VERIFICATION(stack_ptr) ;
 
+#define STACK_DATA_VERIFICATION(stack_ptr) ;
+
 #endif
 
 typedef int elem_t;
+typedef unsigned long long canary_t;
 
 const size_t BASE_CAPACITY = 10;
+const canary_t CANARY_VAL  = 0xB1BAB0BA;
 
 struct Err
 {
-    unsigned char invalid  :1;
-    unsigned char no_data  :1;
-    unsigned char sizeless :1;
-    unsigned char overflow :1;
-    unsigned char underflow:1;
+    unsigned int invalid  :1;
+    unsigned int no_data  :1;
+    unsigned int sizeless :1;
+    unsigned int overflow :1;
+    unsigned int underflow:1;
 };
 
 struct Stack
 {
+    canary_t canary_left;
+
     size_t size;
     size_t capacity;
 
     elem_t *data;
 
     struct Err err;
+
+    canary_t canary_right;
 };
 
 int stack_ctor(struct Stack *stack, const size_t capacity = BASE_CAPACITY);
@@ -57,6 +72,8 @@ int optimal_expansion(struct Stack *stack);
 int optimal_shrink(struct Stack *stack);
 
 void stack_validation(struct Stack *stack);
+
+void stack_data_validation(struct Stack *stack);
 
 void stack_dump(const struct Stack *stack, const char *stack_name, const char *file_name, const char * func_declaration, const int line);
 
