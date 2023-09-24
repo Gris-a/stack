@@ -5,20 +5,23 @@
 #include <stddef.h>
 #include <stdio.h>
 
+extern FILE *LOG_FILE;
+
 #ifndef NDEBUG
 #define STACK_DUMP(stk) stack_dump(&stk, #stk, __FILE__, __PRETTY_FUNCTION__, __LINE__)
 
 #define STACK_VERIFICATION(stack_ptr, err_code, format_str, ...) stack_validation(stack); \
                                                                  if(stack->err.invalid) \
                                                                  { \
-                                                                  printf(format_str, __VA_ARGS__); \
+                                                                  fprintf(LOG_FILE, format_str, __VA_ARGS__); \
                                                                   return err_code; \
                                                                  }
 
 #define STACK_DATA_VERIFICATION(stack_ptr) stack_data_validation(stack); \
                                                 if(stack->err.invalid) \
                                                 { \
-                                                    printf("%s: In %s:%d: error: Corrupted stack data.\n", __FILE__, __PRETTY_FUNCTION__, __LINE__); \
+                                                    fprintf(LOG_FILE, "%s: In %s:%d: error: Corrupted stack data.\n", \
+                                                            __FILE__, __PRETTY_FUNCTION__, __LINE__); \
                                                     return EINVAL; \
                                                 }
 

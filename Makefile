@@ -6,11 +6,14 @@ all: obj a.out
 obj:
 	@mkdir obj
 
-a.out: obj/main.o obj/stack.o
+a.out: obj/main.o obj/stack.o obj/log.o
 	@g++ $(CFLAGS) $^ -o $@
 
-obj/main.o: source/main.cpp include/stack.h
+obj/main.o: source/main.cpp include/stack.h include/log.h
 	@g++ $(CFLAGS) -c $< -o $@
 
 obj/stack.o: source/stack.cpp include/stack.h
+	@g++ $(CFLAGS) -c $< -o $@
+
+obj/log.o: source/log.cpp include/log.h
 	@g++ $(CFLAGS) -c $< -o $@

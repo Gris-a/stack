@@ -10,7 +10,7 @@ int stack_ctor(struct Stack *stack, const size_t capacity)
     assert(stack);
     if(capacity == 0)
     {
-        printf("%s: In %s: error: Capasity should be greater than zero.\n", __FILE__, __PRETTY_FUNCTION__);
+        fprintf(LOG_FILE, "%s: In %s: error: Capasity should be greater than zero.\n", __FILE__, __PRETTY_FUNCTION__);
         return EINVAL;
     }
 
@@ -60,7 +60,7 @@ int push_stack(struct Stack *stack, const elem_t val)
     int err_code = 0;
     if((err_code = optimal_expansion(stack)))
     {
-        printf("%s: In function %s:%d\n", __FILE__, __PRETTY_FUNCTION__, __LINE__ - 2);
+        fprintf(LOG_FILE, "%s: In function %s:%d\n", __FILE__, __PRETTY_FUNCTION__, __LINE__ - 2);
 
         return err_code;
     }
@@ -82,7 +82,7 @@ int pop_stack(struct Stack *stack, elem_t *ret_val)
 
     if(stack->size == 0)
     {
-        printf("Error: stack underflow.\n"
+        fprintf(LOG_FILE, "Error: stack underflow.\n"
                "%s: In function %s\n", __FILE__, __PRETTY_FUNCTION__);
 
         stack->err.invalid   = true;
@@ -99,7 +99,7 @@ int pop_stack(struct Stack *stack, elem_t *ret_val)
     int err_code = 0;
     if((err_code = optimal_shrink(stack)))
     {
-        printf("%s: In function %s:%d\n", __FILE__, __PRETTY_FUNCTION__, __LINE__ - 2);
+        fprintf(LOG_FILE, "%s: In function %s:%d\n", __FILE__, __PRETTY_FUNCTION__, __LINE__ - 2);
 
         return err_code;
     }
@@ -191,35 +191,35 @@ void stack_dump(const struct Stack *stack, const char *stack_name, const char *f
     assert(file_name);
     assert(func_declaration);
 
-    printf("Stack[%p] \"%s\" from %s\n"
-           "In function %s:%d\n", stack, stack_name, file_name, func_declaration, line);
+    fprintf(LOG_FILE, "Stack[%p] \"%s\" from %s\n"
+                      "In function %s:%d\n", stack, stack_name, file_name, func_declaration, line);
 
-    printf("{                 \n"
-            "\tcanary_left  = %#llx;\n"
-            "\terr          = %u;   \n"
-            "\tsize         = %zu;  \n"
-            "\tcapacity     = %zu;  \n"
-            "\tdata[%p]             \n", stack->canary_left,
-                                         *(const unsigned int *)(&stack->err), stack->size, stack->capacity,
-                                         stack->data);
+    fprintf(LOG_FILE, "{                 \n"
+                      "\tcanary_left  = %#llx;\n"
+                      "\terr          = %u;   \n"
+                      "\tsize         = %zu;  \n"
+                      "\tcapacity     = %zu;  \n"
+                      "\tdata[%p]             \n", stack->canary_left,
+                                                 *(const unsigned int *)(&stack->err), stack->size, stack->capacity,
+                                                   stack->data);
 
     if(!stack->err.no_data && !stack->err.sizeless)
     {
-        printf("\t{\n");
+        fprintf(LOG_FILE, "\t{\n");
 
-        printf("\t\t CANARY_LEFT  = %#llx;\n", ((canary_t *)stack->data)[-1]);
+        fprintf(LOG_FILE, "\t\t CANARY_LEFT  = %#llx;\n", ((canary_t *)stack->data)[-1]);
 
         for(size_t i = 0; i < stack->capacity; i++)
         {
-            printf("\t\t");
-            printf((i < stack->size) ? "*" : " ");
-            printf("[%3zu] = %d,\n", i, stack->data[i]);
+            fprintf(LOG_FILE, "\t\t");
+            fprintf(LOG_FILE, (i < stack->size) ? "*" : " ");
+            fprintf(LOG_FILE, "[%3zu] = %d,\n", i, stack->data[i]);
         }
 
-        printf("\t\t CANARY_RIGHT = %#llx;\n", *(canary_t *)(stack->data + stack->capacity));
+        fprintf(LOG_FILE, "\t\t CANARY_RIGHT = %#llx;\n", *(canary_t *)(stack->data + stack->capacity));
 
-        printf("\t};\n");
+        fprintf(LOG_FILE, "\t};\n");
     }
-    printf("\tcanary_right = %#llx;\n", stack->canary_right);
-    printf("}\n");
+    fprintf(LOG_FILE, "\tcanary_right = %#llx;\n", stack->canary_right);
+    fprintf(LOG_FILE, "}\n");
 }
