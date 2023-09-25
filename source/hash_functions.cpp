@@ -14,7 +14,7 @@ void poly_hash(const Stack *stack, size_t *hash)
 
     for(size_t i = 0; i < stack->size; i++)
     {
-        *hash += (size_t)stack->data[i] * powered_P;
+        *hash     += (size_t)stack->data[i] * powered_P;
         powered_P *= P;
     }
 }
