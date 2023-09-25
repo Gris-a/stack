@@ -5,8 +5,10 @@
 
 #include "stack.h"
 
-const size_t P = 257;
+const unsigned long long P = 257;
 
-void poly_hash(const Stack *stack, size_t *hash);
+void poly_hash_data(Stack *stack, size_t *hash);
+
+void poly_hash_stack(Stack *stack, size_t *hash);
 
 #endif //HASH_FUNCTIONS_H

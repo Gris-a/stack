@@ -21,15 +21,19 @@ int stack_ctor(struct Stack *stack, const size_t capacity)
     #ifndef NDEBUG
     stack->canary_left  = Canary_val;
     stack->canary_right = Canary_val;
-    stack->data_hash    = 0;
     stack->err          = {};
 
     stack->data = (elem_t *)((canary_t *)calloc(capacity * sizeof(elem_t) + 2 * sizeof(canary_t), sizeof(char)) + 1);
+
+    HASH_STACK(stack);
 
     STACK_VERIFICATION(stack, ENOMEM, "%s: In %s:%d: error: Unable to allocate memory.\n", __FILE__, __PRETTY_FUNCTION__, __LINE__ - 2);
 
     ((canary_t *)stack->data)[-1]                = Canary_val;
     *(canary_t *)(stack->data + stack->capacity) = Canary_val;
+
+    STACK_DATA_VERIFICATION(stack);
+
     #else
     stack->data = (elem_t *)calloc(capacity * sizeof(elem_t), sizeof(char));
     #endif
@@ -45,10 +49,11 @@ void stack_dtor(struct Stack *stack)
     stack->capacity = 0;
 
     #ifndef NDEBUG
-    stack->data_hash    = 0;
-
     stack->canary_left  = 0;
     stack->canary_right = 0;
+
+    stack->data_hash  = 0;
+    stack->stack_hash = 0;
 
     stack->err          = {};
     stack->err.invalid  = true;
@@ -77,7 +82,7 @@ int push_stack(struct Stack *stack, const elem_t val)
 
     stack->data[stack->size++] = val;
 
-    HASH_DATA(stack);
+    HASH_STACK(stack);
 
     STACK_VERIFICATION(stack, EINVAL, "Error: invalid stack.\n"
                                       "%s: In function %s:%d\n", __FILE__, __PRETTY_FUNCTION__, __LINE__ - 1);
@@ -95,20 +100,22 @@ int pop_stack(struct Stack *stack, elem_t *ret_val)
     if(stack->size == 0)
     {
         fprintf(LOG_FILE, "Error: stack underflow.\n"
-               "%s: In function %s\n", __FILE__, __PRETTY_FUNCTION__);
+                          "%s: In function %s\n", __FILE__, __PRETTY_FUNCTION__);
 
         #ifndef NDEBUG
         stack->err.invalid   = true;
         stack->err.underflow = true;
         #endif
 
+        HASH_STACK(stack);
+
         return EINVAL;
     }
 
-    stack->data[stack->size--] = 0;
-    elem_t value = stack->data[stack->size];
+    elem_t value = stack->data[--stack->size];
+    stack->data[stack->size] = 0;
 
-    HASH_DATA(stack);
+    HASH_STACK(stack);
 
     if(ret_val) *ret_val = value;
 
@@ -119,6 +126,7 @@ int pop_stack(struct Stack *stack, elem_t *ret_val)
 
         return err_code;
     }
+
 
     STACK_VERIFICATION(stack, EINVAL, "Error: invalid stack.\n"
                                       "%s: In function %s:%d\n", __FILE__, __PRETTY_FUNCTION__, __LINE__ - 1);
@@ -145,7 +153,7 @@ int optimal_expansion(struct Stack *stack)
         if(!temp_ptr)
         {
             fprintf(LOG_FILE, "Error: unable to reallocate memory.\n"
-                              "%s: In function %s:%d\n", __FILE__, __PRETTY_FUNCTION__, __LINE__ - 5);
+                              "%s: In function %s:%d\n", __FILE__, __PRETTY_FUNCTION__, __LINE__ - 10);
             return ENOMEM;
         }
 
@@ -159,6 +167,8 @@ int optimal_expansion(struct Stack *stack)
         #ifndef NDEBUG
         *(canary_t *)(stack->data + stack->capacity) = Canary_val;
         #endif
+
+        HASH_STACK(stack);
     }
 
     STACK_VERIFICATION(stack, EINVAL, "Error: invalid stack.\n"
@@ -186,7 +196,7 @@ int optimal_shrink(struct Stack *stack)
         if(!temp_ptr)
         {
             fprintf(LOG_FILE, "Error: unable to reallocate memory.\n"
-                              "%s: In function %s:%d\n", __FILE__, __PRETTY_FUNCTION__, __LINE__ - 5);
+                              "%s: In function %s:%d\n", __FILE__, __PRETTY_FUNCTION__, __LINE__ - 10);
             return ENOMEM;
         }
 
@@ -195,6 +205,8 @@ int optimal_shrink(struct Stack *stack)
         #ifndef NDEBUG
         *(canary_t *)(stack->data + stack->capacity) = Canary_val;
         #endif
+
+        HASH_STACK(stack);
     }
 
     STACK_VERIFICATION(stack, ENOMEM, "Error: unable to reallocate memory.\n"
@@ -216,11 +228,13 @@ void stack_dump(const struct Stack *stack, const char *stack_name, const char *f
     #ifndef NDEBUG
     fprintf(LOG_FILE, "{                     \n"
                       "\tcanary_left = %#llx;\n"
-                      "\terr         = %u;   \n", stack->canary_left, *(const unsigned int *)(&stack->err));
+                      "\terr         = %u;   \n"
+                      "\tdata_hash   = %zu;  \n"
+                      "\tstack_hash  = %zu;  \n", stack->canary_left, *(const unsigned int *)(&stack->err),
+                                                  stack->data_hash, stack->stack_hash);
     #endif
 
-    fprintf(LOG_FILE, "{                     \n"
-                      "\tsize        = %zu;  \n"
+    fprintf(LOG_FILE, "\tsize        = %zu;  \n"
                       "\tcapacity    = %zu;  \n"
                       "\tdata[%p]            \n", stack->size, stack->capacity, stack->data);
 
@@ -264,6 +278,9 @@ void stack_validation(struct Stack *stack)
 {
     assert(stack);
 
+    size_t hash_to_check = stack->stack_hash;
+    poly_hash_stack(stack, &stack->stack_hash);
+
     stack->err = {};
 
     stack->err.no_data  = (stack->data == NULL);
@@ -273,7 +290,9 @@ void stack_validation(struct Stack *stack)
     stack->err.overflow = (!stack->err.sizeless && stack->size > stack->capacity);
 
     stack->err.invalid  = (stack->err.no_data  || stack->err.sizeless || stack->err.overflow ||
-                           stack->canary_left != Canary_val || stack->canary_right != Canary_val);
+                           stack->canary_left != Canary_val || stack->canary_right != Canary_val || hash_to_check != stack->stack_hash);
+
+    stack->stack_hash = hash_to_check;
 }
 
 void stack_data_validation(struct Stack *stack)
@@ -281,7 +300,7 @@ void stack_data_validation(struct Stack *stack)
     assert(stack);
 
     size_t hash_val = 0;
-    poly_hash(stack, &hash_val);
+    poly_hash_data(stack, &hash_val);
 
     if(((canary_t *)stack->data)[-1] != Canary_val || *(canary_t *)(stack->data + stack->capacity) != Canary_val ||
          hash_val != stack->data_hash)

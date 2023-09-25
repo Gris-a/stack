@@ -1,6 +1,6 @@
 #ifndef STACK_H
 #define STACK_H
-//TODO hash of stack(no data). Hash is not biective and canary, hash create and use if defined. Chack if can remove ndebug and place here
+
 #include <errno.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -8,7 +8,6 @@
 extern FILE *LOG_FILE;
 
 #define STACK_DUMP(stk) stack_dump(&stk, #stk, __FILE__, __PRETTY_FUNCTION__, __LINE__)
-
 
 typedef long long elem_t;
 typedef unsigned long long canary_t;
@@ -37,7 +36,8 @@ struct Stack
     elem_t *data;
 
     #ifndef NDEBUG
-    size_t  data_hash;
+    size_t stack_hash;
+    size_t data_hash;
 
     struct Err err;
 
@@ -62,7 +62,8 @@ struct Stack
                                                        __FILE__, __PRETTY_FUNCTION__, __LINE__); \
                                                return EINVAL; \
                                            }
-#define HASH_DATA(stk_adr) poly_hash(stk_adr, &stk_adr->data_hash)
+#define HASH_STACK(stk_adr) poly_hash_data(stk_adr, &stk_adr->data_hash); \
+                            poly_hash_stack(stk_adr , &stk_adr->stack_hash)
 
 #else
 
@@ -70,7 +71,7 @@ struct Stack
 
 #define STACK_DATA_VERIFICATION(...)
 
-#define HASH_DATA(...)
+#define HASH_STACK(...)
 
 #endif
 
