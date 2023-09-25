@@ -1,13 +1,13 @@
 #ifndef STACK_H
 #define STACK_H
-
+//TODO hash of stack(no data). Hash is not biective
 #include <errno.h>
 #include <stddef.h>
 #include <stdio.h>
 
 extern FILE *LOG_FILE;
 
-#ifndef NDEBUG
+#ifndef NPROTECT
 #define STACK_DUMP(stk) stack_dump(&stk, #stk, __FILE__, __PRETTY_FUNCTION__, __LINE__)
 
 #define STACK_VERIFICATION(stack_ptr, err_code, format_str, ...) stack_validation(stack); \
@@ -18,26 +18,26 @@ extern FILE *LOG_FILE;
                                                                  }
 
 #define STACK_DATA_VERIFICATION(stack_ptr) stack_data_validation(stack); \
-                                                if(stack->err.invalid) \
-                                                { \
-                                                    fprintf(LOG_FILE, "%s: In %s:%d: error: Corrupted stack data.\n", \
-                                                            __FILE__, __PRETTY_FUNCTION__, __LINE__); \
-                                                    return EINVAL; \
-                                                }
+                                           if(stack->err.invalid) \
+                                           { \
+                                               fprintf(LOG_FILE, "%s: In %s:%d: error: Corrupted stack data.\n", \
+                                                       __FILE__, __PRETTY_FUNCTION__, __LINE__); \
+                                               return EINVAL; \
+                                           }
 
 #else
 
-#define STACK_VERIFICATION(stack_ptr) ;
+#define STACK_VERIFICATION(stack_ptr)
 
-#define STACK_DATA_VERIFICATION(stack_ptr) ;
+#define STACK_DATA_VERIFICATION(stack_ptr)
 
 #endif
 
-typedef int elem_t;
+typedef long long elem_t;
 typedef unsigned long long canary_t;
 
-const size_t BASE_CAPACITY = 10;
-const canary_t CANARY_VAL  = 0xB1BAB0BA;
+const size_t Base_capacity = 10;
+const canary_t Canary_val  = 0xB1BAB0BA;
 
 struct Err
 {
@@ -56,13 +56,14 @@ struct Stack
     size_t capacity;
 
     elem_t *data;
+    size_t  hash;
 
     struct Err err;
 
     canary_t canary_right;
 };
 
-int stack_ctor(struct Stack *stack, const size_t capacity = BASE_CAPACITY);
+int stack_ctor(struct Stack *stack, const size_t capacity = Base_capacity);
 
 void stack_dtor(struct Stack *stack);
 
