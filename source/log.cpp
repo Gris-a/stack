@@ -22,5 +22,6 @@ FILE *open_log(void)
 
 void close_log(void)
 {
+    fflush(LOG_FILE);
     fclose(LOG_FILE);
 }
