@@ -130,7 +130,7 @@ int push_stack(const stk_d stack_descriptor, const elem_t val)
 
 
     int err_code = 0;
-    if((err_code = optimal_expansion(stack)))
+    if((err_code = optimal_expansion(stack_descriptor)))
     {
         fprintf(LOG_FILE, "%s: In function %s:%d\n", __FILE__, __PRETTY_FUNCTION__, __LINE__ - 2);
 
@@ -186,7 +186,7 @@ int pop_stack(const stk_d stack_descriptor, elem_t *ret_val)
     if(ret_val) *ret_val = value;
 
     int err_code = 0;
-    if((err_code = optimal_shrink(stack)))
+    if((err_code = optimal_shrink(stack_descriptor)))
     {
         fprintf(LOG_FILE, "%s: In function %s:%d\n", __FILE__, __PRETTY_FUNCTION__, __LINE__ - 2);
 
@@ -203,8 +203,12 @@ int pop_stack(const stk_d stack_descriptor, elem_t *ret_val)
     return EXIT_SUCCESS;
 }
 
-int optimal_expansion(struct Stack *stack)
+int optimal_expansion(const stk_d stack_descriptor)
 {
+    STACK_DESCRIPTOR_VERIFICATION(stack_descriptor);
+
+    struct Stack *stack = Stacks + stack_descriptor;
+
     STACK_VERIFICATION(stack, EINVAL, "Error: invalid stack.\n"
                                       "%s: In function %s:%d\n", __FILE__, __PRETTY_FUNCTION__, __LINE__ - 1);
     STACK_DATA_VERIFICATION(stack);
@@ -250,8 +254,12 @@ int optimal_expansion(struct Stack *stack)
     return EXIT_SUCCESS;
 }
 
-int optimal_shrink(struct Stack *stack)
+int optimal_shrink(const stk_d stack_descriptor)
 {
+    STACK_DESCRIPTOR_VERIFICATION(stack_descriptor);
+
+    struct Stack *stack = Stacks + stack_descriptor;
+
     STACK_VERIFICATION(stack, EINVAL, "Error: invalid stack.\n"
                                       "%s: In function %s:%d\n", __FILE__, __PRETTY_FUNCTION__, __LINE__ - 1);
     STACK_DATA_VERIFICATION(stack);

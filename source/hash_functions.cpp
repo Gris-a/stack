@@ -41,4 +41,6 @@ void poly_hash_stack(Stack *stack, size_t *hash)
         *hash     += (size_t)(*byte_stk++) * powered_P;
         powered_P *= P;
     }
+
+    stack->stack_hash = *hash;
 }

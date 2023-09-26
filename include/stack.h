@@ -44,7 +44,7 @@ struct Stack
     #endif
 };
 
-#define STACK_DUMP(stk) stack_dump(stk, #stk, __FILE__, __PRETTY_FUNCTION__, __LINE__)
+#define STACK_DUMP(stk_descriptor) stack_dump(stk_descriptor, #stk_descriptor, __FILE__, __PRETTY_FUNCTION__, __LINE__)
 
 #ifndef NDEBUG
 #include "../include/hash_functions.h"
@@ -94,9 +94,9 @@ int push_stack(const stk_d stack_descriptor, const elem_t val);
 
 int pop_stack(const stk_d stack_descriptor, elem_t *ret_val = NULL);
 
-int optimal_expansion(struct Stack *stack);
+int optimal_expansion(const stk_d stack_descriptor);
 
-int optimal_shrink(struct Stack *stack);
+int optimal_shrink(const stk_d stack_descriptor);
 
 int stack_dump(const stk_d stack_descriptor, const char *stack_name, const char *file_name, const char * func_declaration, const int line);
 
