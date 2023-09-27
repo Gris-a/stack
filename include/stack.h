@@ -7,12 +7,9 @@
 
 extern FILE *LOG_FILE;
 
+typedef size_t stk_d;
 typedef long long elem_t;
 typedef unsigned long long canary_t;
-typedef size_t stk_d;
-
-const size_t Base_capacity = 10;
-const canary_t Canary_val  = 0xB1BAB0BA;
 
 struct Err
 {
@@ -71,8 +68,8 @@ struct Stack
                                                             return EINVAL; \
                                                         }
 
-#define HASH_STACK(stk_adr) poly_hash_data (stk_adr, &stk_adr->data_hash); \
-                            poly_hash_stack(stk_adr, &stk_adr->stack_hash)
+#define HASH_STACK(stk_adr) stk_adr->data_hash  = poly_hash_data (stk_adr); \
+                            stk_adr->stack_hash = poly_hash_stack(stk_adr)
 
 #else
 

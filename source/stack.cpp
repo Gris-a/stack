@@ -6,7 +6,7 @@
 #include "../include/stack.h"
 
 static size_t N_buffered_stacks = 1;
-struct Stack *Stacks            = NULL;
+static struct Stack *Stacks     = NULL; //if not static => pi pi pi pu pu pu
 
 int stack_ctor(stk_d *stack_descriptor, const size_t capacity)
 {
@@ -57,8 +57,8 @@ int stack_ctor(stk_d *stack_descriptor, const size_t capacity)
     stack->capacity = capacity;
 
     #ifndef NDEBUG
-    stack->canary_left  = Canary_val;
-    stack->canary_right = Canary_val;
+    stack->canary_left  = (canary_t)&stack->canary_left ;
+    stack->canary_right = (canary_t)&stack->canary_right;
 
     stack->data = (elem_t *)((canary_t *)calloc(capacity * sizeof(elem_t) + 2 * sizeof(canary_t), sizeof(char)) + 1);
 
@@ -68,8 +68,8 @@ int stack_ctor(stk_d *stack_descriptor, const size_t capacity)
     STACK_VERIFICATION(stack, ENOMEM, "%s: In %s:%d: error: Unable to allocate memory.\n", __FILE__, __PRETTY_FUNCTION__, __LINE__ - 2);
 
 
-    ((canary_t *)stack->data)[-1]                = Canary_val;
-    *(canary_t *)(stack->data + stack->capacity) = Canary_val;
+    ((canary_t *)stack->data)[-1]                = (canary_t)&stack->canary_left;
+    *(canary_t *)(stack->data + stack->capacity) = (canary_t)&stack->canary_right;
 
 
     STACK_DATA_VERIFICATION(stack);
@@ -239,7 +239,7 @@ int optimal_expansion(const stk_d stack_descriptor)
         }
 
         #ifndef NDEBUG
-        *(canary_t *)(stack->data + stack->capacity) = Canary_val;
+        *(canary_t *)(stack->data + stack->capacity) = (canary_t)&stack->canary_right;
         #endif
 
         HASH_STACK(stack);
@@ -285,7 +285,7 @@ int optimal_shrink(const stk_d stack_descriptor)
         stack->data = temp_ptr;
 
         #ifndef NDEBUG
-        *(canary_t *)(stack->data + stack->capacity) = Canary_val;
+        *(canary_t *)(stack->data + stack->capacity) = (canary_t)&stack->canary_right;
         #endif
 
         HASH_STACK(stack);
@@ -369,8 +369,7 @@ void stack_validation(struct Stack *stack)
     assert(stack);
 
 
-    size_t hash_to_check = stack->stack_hash;
-    poly_hash_stack(stack, &stack->stack_hash);
+    size_t hash_val = poly_hash_stack(stack);
 
     stack->err = {};
 
@@ -381,9 +380,8 @@ void stack_validation(struct Stack *stack)
     stack->err.overflow = (!stack->err.sizeless && stack->size > stack->capacity);
 
     stack->err.invalid  = (stack->err.no_data  || stack->err.sizeless || stack->err.overflow ||
-                           stack->canary_left != Canary_val || stack->canary_right != Canary_val || hash_to_check != stack->stack_hash);
-
-    stack->stack_hash = hash_to_check;
+                           stack->canary_left  != (canary_t)&stack->canary_left || stack->canary_right != (canary_t)&stack->canary_right ||
+                           hash_val != stack->stack_hash);
 }
 
 void stack_data_validation(struct Stack *stack)
@@ -391,10 +389,10 @@ void stack_data_validation(struct Stack *stack)
     assert(stack);
 
 
-    size_t hash_val = 0;
-    poly_hash_data(stack, &hash_val);
+    size_t hash_val = poly_hash_data(stack);
 
-    if(((canary_t *)stack->data)[-1] != Canary_val || *(canary_t *)(stack->data + stack->capacity) != Canary_val ||
+    if(((canary_t *)stack->data)[-1]                != (canary_t)&stack->canary_left  ||
+       *(canary_t *)(stack->data + stack->capacity) != (canary_t)&stack->canary_right ||
          hash_val != stack->data_hash)
     {
         stack->err.invalid = true;
