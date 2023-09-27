@@ -4,7 +4,9 @@
 #include "../include/hash_functions.h"
 #include "../include/stack.h"
 
-size_t poly_hash_data(Stack *stack) //TODO static functions maybe Bad if outside of stack
+static const unsigned long long P = 257;
+
+size_t poly_hash_data(Stack *stack)
 {
     assert(stack != NULL);
 

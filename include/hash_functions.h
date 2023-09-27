@@ -3,9 +3,7 @@
 
 #include <stddef.h>
 
-#include "stack.h"
-
-const unsigned long long P = 257;
+#include "types.h"
 
 size_t poly_hash_data(Stack *stack);
 
