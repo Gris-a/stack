@@ -1,15 +1,28 @@
 # Proteted Stack
-Защищённый стек.
+Stack protected with Canary protection, hash and descriptors.
 
 ## Instalation
 - Clone this repository
 
-'''
+```
 git clone https://github.com/Gris-a/stack
-'''
-- Compile porgram from stack folder
+```
 
-'''
-make
-'''
+## Usage
+include stack.h
 
+```
+#include "../include/stack.h"
+```
+and use it.
+
+## About The Program
+
+`#define NDEBUG` in stack.cpp to off protectiion.
+
+## Author
+Идея: [ДЕД](https://vk.com/ded32_ru)
+
+Реализация: [Gris-a](https://github.com/Gris-a/)
+
+Telegram: [GraY](https://t.me/qgrayq)
