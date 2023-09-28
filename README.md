@@ -4,9 +4,12 @@
 ## Instalation
 - Clone this repository
 
-'git clone https://github.com/Gris-a/stack'
-
+'''
+git clone https://github.com/Gris-a/stack
+'''
 - Compile porgram from stack folder
 
-'make'
+'''
+make
+'''
 
