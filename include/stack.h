@@ -5,44 +5,9 @@
 #include <stddef.h>
 #include <stdio.h>
 
+#include "types.h"
+
 extern FILE *LOG_FILE;
-
-typedef long long elem_t;
-typedef unsigned long long canary_t;
-typedef size_t stk_d;
-
-const size_t Base_capacity = 10;
-const canary_t Canary_val  = 0xB1BAB0BA;
-
-struct Err
-{
-    unsigned int invalid  :1;
-    unsigned int no_data  :1;
-    unsigned int sizeless :1;
-    unsigned int overflow :1;
-    unsigned int underflow:1;
-};
-
-struct Stack
-{
-    #ifndef NDEBUG
-    canary_t canary_left;
-    #endif
-
-    size_t size;
-    size_t capacity;
-
-    elem_t *data;
-
-    #ifndef NDEBUG
-    size_t stack_hash;
-    size_t data_hash;
-
-    struct Err err;
-
-    canary_t canary_right;
-    #endif
-};
 
 #define STACK_DUMP(stk_descriptor) stack_dump(stk_descriptor, #stk_descriptor, __FILE__, __PRETTY_FUNCTION__, __LINE__)
 

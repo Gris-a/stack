@@ -24,7 +24,7 @@ void poly_hash_data(Stack *stack, size_t *hash)
     }
 }
 
-void poly_hash_stack(Stack *stack, size_t *hash)
+void poly_hash_stack(Stack *stack)
 {
     assert(stack != NULL);
     assert(hash  != NULL);

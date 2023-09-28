@@ -3,7 +3,7 @@
 
 #include <stddef.h>
 
-#include "stack.h"
+#include "types.h"
 
 const unsigned long long P = 257;
 
