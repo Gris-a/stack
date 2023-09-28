@@ -321,8 +321,7 @@ void stack_validation(struct Stack *stack)
 {
     assert(stack);
 
-    size_t hash_to_check = stack->stack_hash;
-    poly_hash_stack(stack, &stack->stack_hash);
+    size_t hash_val = poly_hash_stack(stack);
 
     stack->err = {};
 
@@ -332,18 +331,16 @@ void stack_validation(struct Stack *stack)
 
     stack->err.overflow = (!stack->err.sizeless && stack->size > stack->capacity);
 
-    stack->err.invalid  = (stack->err.no_data  || stack->err.sizeless || stack->err.overflow ||
-                           stack->canary_left != Canary_val || stack->canary_right != Canary_val || hash_to_check != stack->stack_hash);
-
-    stack->stack_hash = hash_to_check;
+    stack->err.invalid  = (stack->err.no_data || stack->err.sizeless || stack->err.overflow ||
+                           stack->canary_left != Canary_val || stack->canary_right != Canary_val ||
+                           hash_val != stack->stack_hash);
 }
 
 void stack_data_validation(struct Stack *stack)
 {
     assert(stack);
 
-    size_t hash_val = 0;
-    poly_hash_data(stack, &hash_val);
+    size_t hash_val = poly_hash_data(stack);
 
     if(((canary_t *)stack->data)[-1] != Canary_val || *(canary_t *)(stack->data + stack->capacity) != Canary_val ||
          hash_val != stack->data_hash)

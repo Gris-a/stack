@@ -36,8 +36,8 @@ extern FILE *LOG_FILE;
                                                             return EINVAL; \
                                                         }
 
-#define HASH_STACK(stk_adr) poly_hash_data (stk_adr, &stk_adr->data_hash); \
-                            poly_hash_stack(stk_adr, &stk_adr->stack_hash)
+#define HASH_STACK(stk_adr) stk_adr->data_hash  = poly_hash_data (stk_adr); \
+                            stk_adr->stack_hash = poly_hash_stack(stk_adr)
 
 #else
 
