@@ -5,18 +5,11 @@
 
 #include "../include/stack.h"
 
-static size_t N_buffered_stacks = 1;
-struct Stack *Stacks            = NULL;
+static size_t N_buffered_stacks = 2;
+struct Stack *Stacks            = (struct Stack *)calloc(N_buffered_stacks, sizeof(Stack));//free
 
 int stack_ctor(stk_d *stack_descriptor, const size_t capacity)
 {
-    if(N_buffered_stacks == 1)
-    {
-        Stacks = (struct Stack *)calloc(++N_buffered_stacks, sizeof(Stack));
-
-        atexit(free_stack_mem);
-    }
-
     static size_t N_stack = 1;
 
     assert(Stacks);
@@ -34,7 +27,7 @@ int stack_ctor(stk_d *stack_descriptor, const size_t capacity)
 
     if(N_stack == N_buffered_stacks)
     {
-        struct Stack *temp_ptr = (struct Stack *)realloc(Stacks, N_buffered_stacks *= 2);
+        struct Stack *temp_ptr = (struct Stack *)realloc(Stacks, (N_buffered_stacks *= 2) * sizeof(Stack));
 
         if(!temp_ptr)
         {
@@ -44,15 +37,11 @@ int stack_ctor(stk_d *stack_descriptor, const size_t capacity)
             return ENOMEM;
         }
 
-        Stacks = temp_ptr;
-
-        for(size_t i = N_buffered_stacks; i < N_buffered_stacks * 2; i++)
-        {
-            Stacks[i] = {};
-        }
+        Stacks = temp_ptr;//0
     }
 
     struct Stack *stack = Stacks + N_stack;
+    *stack = {};
 
     stack->capacity = capacity;
 
@@ -63,7 +52,6 @@ int stack_ctor(stk_d *stack_descriptor, const size_t capacity)
     stack->data = (elem_t *)((canary_t *)calloc(capacity * sizeof(elem_t) + 2 * sizeof(canary_t), sizeof(char)) + 1);
 
     HASH_STACK(stack);
-
 
     STACK_VERIFICATION(stack, ENOMEM, "%s: In %s:%d: error: Unable to allocate memory.\n", __FILE__, __PRETTY_FUNCTION__, __LINE__ - 2);
 
@@ -79,7 +67,8 @@ int stack_ctor(stk_d *stack_descriptor, const size_t capacity)
     stack->data = (elem_t *)calloc(capacity * sizeof(elem_t), sizeof(char));
     #endif
 
-    *stack_descriptor = N_stack++;
+    *stack_descriptor = N_stack;
+    N_stack++;
 
 
     return EXIT_SUCCESS;
@@ -356,11 +345,6 @@ int stack_dump(const stk_d stack_descriptor, const char *stack_name, const char 
 
 
     return EXIT_SUCCESS;
-}
-
-void free_stack_mem(void)
-{
-    free(Stacks);
 }
 
 #ifndef NDEBUG

@@ -106,6 +106,4 @@ void stack_validation(struct Stack *stack);
 void stack_data_validation(struct Stack *stack);
 #endif
 
-void free_stack_mem(void);
-
 #endif //STACK_H
