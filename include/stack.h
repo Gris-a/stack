@@ -15,14 +15,14 @@ extern FILE *LOG_FILE;
 #include "../include/hash_functions.h"
 
 #define STACK_VERIFICATION(stack_ptr, err_code, format_str, ...) stack_validation(stack_ptr); \
-                                                                 if(stack_ptr->err.invalid) \
+                                                                 if((stack_ptr)->err.invalid) \
                                                                  { \
                                                                   fprintf(LOG_FILE, format_str, __VA_ARGS__); \
                                                                   return err_code; \
                                                                  }
 
 #define STACK_DATA_VERIFICATION(stack_ptr) stack_data_validation(stack_ptr); \
-                                           if(stack_ptr->err.invalid) \
+                                           if((stack_ptr)->err.invalid) \
                                            { \
                                                fprintf(LOG_FILE, "%s: In %s:%d: error: Corrupted stack data.\n", \
                                                        __FILE__, __PRETTY_FUNCTION__, __LINE__); \
@@ -36,9 +36,13 @@ extern FILE *LOG_FILE;
                                                             return EINVAL; \
                                                         }
 
+#define VERIFICATION(stack_descriptor, stack_ptr, ...) STACK_DESCRIPTOR_VERIFICATION(stack_descriptor); \
+                                                       STACK_VERIFICATION(stack_ptr, __VA_ARGS__); \
+                                                       STACK_DATA_VERIFICATION(stack_ptr); \
+
+
 #define HASH_STACK(stk_adr) stk_adr->data_hash  = poly_hash_data (stk_adr); \
                             stk_adr->stack_hash = poly_hash_stack(stk_adr)
-
 #else
 
 #define STACK_VERIFICATION(...)
@@ -46,6 +50,8 @@ extern FILE *LOG_FILE;
 #define STACK_DATA_VERIFICATION(...)
 
 #define STACK_DESCRIPTOR_VERIFICATION(stack_descriptor)
+
+#define VERIFICATION(...)
 
 #define HASH_STACK(...)
 

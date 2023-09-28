@@ -6,12 +6,12 @@
 #include "../include/stack.h"
 
 static size_t N_buffered_stacks = 1;
-static const int Max_stacks     = 1000;
-struct Stack Stacks[Max_stacks] = {};
+static const int Max_stacks     = 100;
+struct Stack Stacks[Max_stacks] = {}; //static
 
 int stack_ctor(stk_d *stack_descriptor, const size_t capacity)
 {
-    static size_t N_stack = 1;
+    static size_t Stack_N = 1;
 
     assert(Stacks);
     assert(stack_descriptor);
@@ -25,15 +25,15 @@ int stack_ctor(stk_d *stack_descriptor, const size_t capacity)
         return EINVAL;
     }
 
-    if(N_stack >= Max_stacks)
+    if(Stack_N >= Max_stacks)
     {
-        fprintf(LOG_FILE, "%s: In %s: error: Capasity should be greater than zero.\n", __FILE__, __PRETTY_FUNCTION__);
+        fprintf(LOG_FILE, "%s: In %s: error: Max stacks limit reached.\n", __FILE__, __PRETTY_FUNCTION__);
 
         return EACCES;
     }
 
     N_buffered_stacks++;
-    struct Stack *stack = Stacks + N_stack;
+    struct Stack *stack = Stacks + Stack_N;
 
     stack->capacity = capacity;
 
@@ -56,8 +56,8 @@ int stack_ctor(stk_d *stack_descriptor, const size_t capacity)
     stack->data = (elem_t *)calloc(capacity * sizeof(elem_t), sizeof(char));
     #endif
 
-    *stack_descriptor = N_stack;
-    N_stack++;
+    *stack_descriptor = Stack_N;
+    Stack_N++;
 
     return EXIT_SUCCESS;
 }
@@ -95,13 +95,10 @@ int stack_dtor(const stk_d stack_descriptor)
 
 int push_stack(const stk_d stack_descriptor, const elem_t val)
 {
-    STACK_DESCRIPTOR_VERIFICATION(stack_descriptor);
-
     struct Stack *stack = Stacks + stack_descriptor;
 
-    STACK_VERIFICATION(stack, EINVAL, "Error: invalid stack.\n"
-                                      "%s: In function %s:%d\n", __FILE__, __PRETTY_FUNCTION__, __LINE__ - 1);
-    STACK_DATA_VERIFICATION(stack);
+    VERIFICATION(stack_descriptor, stack, EINVAL, "Error: invalid stack.\n"
+                                                  "%s: In function %s:%d\n", __FILE__, __PRETTY_FUNCTION__, __LINE__ - 1);
 
     int err_code = 0;
     if((err_code = optimal_expansion(stack_descriptor)))
@@ -115,22 +112,18 @@ int push_stack(const stk_d stack_descriptor, const elem_t val)
 
     HASH_STACK(stack);
 
-    STACK_VERIFICATION(stack, EINVAL, "Error: invalid stack.\n"
-                                      "%s: In function %s:%d\n", __FILE__, __PRETTY_FUNCTION__, __LINE__ - 1);
-    STACK_DATA_VERIFICATION(stack);
+    VERIFICATION(stack_descriptor, stack, EINVAL, "Error: invalid stack.\n"
+                                                  "%s: In function %s:%d\n", __FILE__, __PRETTY_FUNCTION__, __LINE__ - 1);
 
     return EXIT_SUCCESS;
 }
 
 int pop_stack(const stk_d stack_descriptor, elem_t *ret_val)
 {
-    STACK_DESCRIPTOR_VERIFICATION(stack_descriptor);
-
     struct Stack *stack = Stacks + stack_descriptor;
 
-    STACK_VERIFICATION(stack, EINVAL, "Error: invalid stack.\n"
-                                      "%s: In function %s:%d\n", __FILE__, __PRETTY_FUNCTION__, __LINE__ - 1);
-    STACK_DATA_VERIFICATION(stack);
+    VERIFICATION(stack_descriptor, stack, EINVAL, "Error: invalid stack.\n"
+                                                  "%s: In function %s:%d\n", __FILE__, __PRETTY_FUNCTION__, __LINE__ - 1);
 
     if(stack->size == 0)
     {
@@ -162,22 +155,18 @@ int pop_stack(const stk_d stack_descriptor, elem_t *ret_val)
         return err_code;
     }
 
-    STACK_VERIFICATION(stack, EINVAL, "Error: invalid stack.\n"
-                                      "%s: In function %s:%d\n", __FILE__, __PRETTY_FUNCTION__, __LINE__ - 1);
-    STACK_DATA_VERIFICATION(stack);
+    VERIFICATION(stack_descriptor, stack, EINVAL, "Error: invalid stack.\n"
+                                                  "%s: In function %s:%d\n", __FILE__, __PRETTY_FUNCTION__, __LINE__ - 1);
 
     return EXIT_SUCCESS;
 }
 
 int optimal_expansion(const stk_d stack_descriptor)
 {
-    STACK_DESCRIPTOR_VERIFICATION(stack_descriptor);
-
     struct Stack *stack = Stacks + stack_descriptor;
 
-    STACK_VERIFICATION(stack, EINVAL, "Error: invalid stack.\n"
-                                      "%s: In function %s:%d\n", __FILE__, __PRETTY_FUNCTION__, __LINE__ - 1);
-    STACK_DATA_VERIFICATION(stack);
+    VERIFICATION(stack_descriptor, stack, EINVAL, "Error: invalid stack.\n"
+                                                  "%s: In function %s:%d\n", __FILE__, __PRETTY_FUNCTION__, __LINE__ - 1);
 
     if(stack->size == stack->capacity)
     {
@@ -210,22 +199,18 @@ int optimal_expansion(const stk_d stack_descriptor)
         HASH_STACK(stack);
     }
 
-    STACK_VERIFICATION(stack, EINVAL, "Error: invalid stack.\n"
-                                      "%s: In function %s:%d\n", __FILE__, __PRETTY_FUNCTION__, __LINE__ - 1);
-    STACK_DATA_VERIFICATION(stack);
+    VERIFICATION(stack_descriptor, stack, EINVAL, "Error: invalid stack.\n"
+                                                  "%s: In function %s:%d\n", __FILE__, __PRETTY_FUNCTION__, __LINE__ - 1);
 
     return EXIT_SUCCESS;
 }
 
 int optimal_shrink(const stk_d stack_descriptor)
 {
-    STACK_DESCRIPTOR_VERIFICATION(stack_descriptor);
-
     struct Stack *stack = Stacks + stack_descriptor;
 
-    STACK_VERIFICATION(stack, EINVAL, "Error: invalid stack.\n"
-                                      "%s: In function %s:%d\n", __FILE__, __PRETTY_FUNCTION__, __LINE__ - 1);
-    STACK_DATA_VERIFICATION(stack);
+    VERIFICATION(stack_descriptor, stack, EINVAL, "Error: invalid stack.\n"
+                                                  "%s: In function %s:%d\n", __FILE__, __PRETTY_FUNCTION__, __LINE__ - 1);
 
     if(stack->size * 4 == stack->capacity)
     {
@@ -253,18 +238,17 @@ int optimal_shrink(const stk_d stack_descriptor)
         HASH_STACK(stack);
     }
 
-    STACK_VERIFICATION(stack, ENOMEM, "Error: unable to reallocate memory.\n"
-                                      "%s: In function %s:%d\n", __FILE__, __PRETTY_FUNCTION__, __LINE__ - 5);
-    STACK_DATA_VERIFICATION(stack);
+    VERIFICATION(stack_descriptor, stack, EINVAL, "Error: invalid stack.\n"
+                                                  "%s: In function %s:%d\n", __FILE__, __PRETTY_FUNCTION__, __LINE__ - 1);
 
     return EXIT_SUCCESS;
 }
 
 int stack_dump(const stk_d stack_descriptor, const char *stack_name, const char *file_name, const char * func_declaration, const int line)
 {
-    STACK_DESCRIPTOR_VERIFICATION(stack_descriptor);
-
     struct Stack *stack = Stacks + stack_descriptor;
+
+    STACK_DESCRIPTOR_VERIFICATION(stack_descriptor);
 
     assert(stack);
     assert(stack_name);
