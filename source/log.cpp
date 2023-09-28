@@ -1,3 +1,9 @@
+/**
+ * @file log.cpp
+ * @author GraY
+ * @brief Logging functions and globals definitions.
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 

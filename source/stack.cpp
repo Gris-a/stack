@@ -1,3 +1,9 @@
+/**
+ * @file stack.cpp
+ * @author GraY
+ * @brief Stack functions definitions.
+ */
+
 #include <assert.h>
 #include <errno.h>
 #include <stdio.h>

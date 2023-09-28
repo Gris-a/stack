@@ -1,3 +1,9 @@
+/**
+ * @file hash_functions.cpp
+ * @author GraY
+ * @brief Stack hashing functions definitions.
+ */
+
 #include <assert.h>
 #include <stddef.h>
 
