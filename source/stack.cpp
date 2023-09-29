@@ -43,7 +43,7 @@ int stack_ctor(stk_d *stack_descriptor, const size_t capacity)
 
     stack->capacity = capacity;
 
-    #ifndef NDEBUG
+#ifdef PROTECT
     stack->canary_left  = Canary_val;
     stack->canary_right = Canary_val;
 
@@ -58,9 +58,9 @@ int stack_ctor(stk_d *stack_descriptor, const size_t capacity)
 
     STACK_DATA_VERIFICATION(Stacks, Stack_D);
 
-    #else
+#else
     stack->data = (elem_t *)calloc(capacity * sizeof(elem_t), sizeof(char));
-    #endif
+#endif
 
     *stack_descriptor = Stack_D;
     Stack_D++;
@@ -79,7 +79,7 @@ int stack_dtor(const stk_d stack_descriptor)
     stack->size     = 0;
     stack->capacity = 0;
 
-    #ifndef NDEBUG
+#ifdef PROTECT
     stack->canary_left  = 0;
     stack->canary_right = 0;
 
@@ -92,9 +92,9 @@ int stack_dtor(const stk_d stack_descriptor)
     stack->err.no_data  = true;
 
     free((canary_t *)stack->data - 1);
-    #else
+#else
     free(stack->data);
-    #endif
+#endif
 
     return EXIT_SUCCESS;
 }
@@ -136,10 +136,10 @@ int pop_stack(const stk_d stack_descriptor, elem_t *ret_val)
         fprintf(LOG_FILE, "Error: stack underflow.\n"
                           "%s: In function %s\n", __FILE__, __PRETTY_FUNCTION__);
 
-        #ifndef NDEBUG
+#ifdef PROTECT
         stack->err.invalid   = true;
         stack->err.underflow = true;
-        #endif
+#endif
 
         HASH_STACK(stack);
         STACK_DUMP(stack_descriptor);
@@ -177,12 +177,7 @@ int optimal_expansion(const stk_d stack_descriptor)
 
     if(stack->size == stack->capacity)
     {
-        #ifndef NDEBUG
-        elem_t *temp_ptr = (elem_t *)((canary_t *)realloc(((canary_t *)stack->data) - 1,
-                                                            sizeof(elem_t) * (stack->capacity *= 2) + 2 * sizeof(canary_t)) + 1);
-        #else
-        elem_t *temp_ptr = (elem_t *)realloc(stack->data, sizeof(elem_t) * (stack->capacity *= 2));
-        #endif
+        elem_t *temp_ptr = REALOC_DATA_UP(stack);
 
         if(!temp_ptr)
         {
@@ -201,9 +196,9 @@ int optimal_expansion(const stk_d stack_descriptor)
             stack->data[i] = 0;
         }
 
-        #ifndef NDEBUG
+#ifdef PROTECT
         *(canary_t *)(stack->data + stack->capacity) = Canary_val;
-        #endif
+#endif
 
         HASH_STACK(stack);
     }
@@ -223,12 +218,7 @@ int optimal_shrink(const stk_d stack_descriptor)
 
     if(stack->size * 4 == stack->capacity)
     {
-        #ifndef NDEBUG
-        elem_t *temp_ptr = (elem_t *)((canary_t *)realloc(((canary_t *)stack->data) - 1,
-                                                            sizeof(elem_t) * (stack->capacity /= 2) + 2 * sizeof(canary_t)) + 1);
-        #else
-        elem_t *temp_ptr = (elem_t *)realloc(stack->data, sizeof(elem_t) * (stack->capacity /= 2));
-        #endif
+        elem_t *temp_ptr = REALOC_DATA_DOWN(stack);
 
         if(!temp_ptr)
         {
@@ -242,9 +232,9 @@ int optimal_shrink(const stk_d stack_descriptor)
 
         stack->data = temp_ptr;
 
-        #ifndef NDEBUG
+#ifdef PROTECT
         *(canary_t *)(stack->data + stack->capacity) = Canary_val;
-        #endif
+#endif
 
         HASH_STACK(stack);
     }
@@ -268,14 +258,14 @@ int stack_dump(const stk_d stack_descriptor, const char *Stack_Name, const char 
 
     fprintf(LOG_FILE, "Stack[%p] \"%s\" from %s\n"
                       "In function %s:%d\n", stack, Stack_Name, file_name, func_declaration, line);
-    #ifndef NDEBUG
+#ifdef PROTECT
     fprintf(LOG_FILE, "{                     \n"
                       "\tcanary_left = %#llx;\n"
                       "\terr         = %u;   \n"
                       "\tdata_hash   = %zu;  \n"
                       "\tstack_hash  = %zu;  \n", stack->canary_left, *(const unsigned int *)(&stack->err),
                                                   stack->data_hash  , stack->stack_hash);
-    #endif
+#endif
 
     fprintf(LOG_FILE, "\tsize        = %zu;  \n"
                       "\tcapacity    = %zu;  \n"
@@ -285,9 +275,9 @@ int stack_dump(const stk_d stack_descriptor, const char *Stack_Name, const char 
     {
         fprintf(LOG_FILE, "\t{\n");
 
-        #ifndef NDEBUG
+#ifdef PROTECT
         fprintf(LOG_FILE, "\t\t CANARY_LEFT  = %#llx;\n", ((canary_t *)stack->data)[-1]);
-        #endif
+#endif
 
         for(size_t i = 0; i < stack->capacity; i++)
         {
@@ -296,22 +286,22 @@ int stack_dump(const stk_d stack_descriptor, const char *Stack_Name, const char 
             fprintf(LOG_FILE, "[%3zu] = %lld,\n", i, stack->data[i]);
         }
 
-        #ifndef NDEBUG
+#ifdef PROTECT
         fprintf(LOG_FILE, "\t\t CANARY_RIGHT = %#llx;\n", *(canary_t *)(stack->data + stack->capacity));
-        #endif
+#endif
 
         fprintf(LOG_FILE, "\t};\n");
 
-        #ifndef NDEBUG
+#ifdef PROTECT
         fprintf(LOG_FILE, "\tcanary_right = %#llx;\n", stack->canary_right);
-        #endif
+#endif
     }
     fprintf(LOG_FILE, "}\n");
 
     return EXIT_SUCCESS;
 }
 
-#ifndef NDEBUG
+#ifdef PROTECT
 void stack_validation(struct Stack *stack)
 {
     assert(stack);

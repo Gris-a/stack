@@ -7,11 +7,14 @@
  * @brief Functions and macros for working with the stack.
  */
 
+
 #include <errno.h>
 #include <stddef.h>
 #include <stdio.h>
 
 #include "types.h"
+
+#define PROTECT
 
 extern FILE *LOG_FILE; ///< Log file from log.cpp.
 
@@ -20,7 +23,7 @@ extern FILE *LOG_FILE; ///< Log file from log.cpp.
  */
 #define STACK_DUMP(stk_descriptor) stack_dump(stk_descriptor, #stk_descriptor, __FILE__, __PRETTY_FUNCTION__, __LINE__)
 
-#ifndef NDEBUG
+#ifdef PROTECT
 #include "../include/hash_functions.h"
 
 /**
@@ -47,6 +50,7 @@ extern FILE *LOG_FILE; ///< Log file from log.cpp.
                                                                STACK_DUMP(stack_descriptor); \
                                                                return EINVAL; \
                                                           }
+
 /**
  * @brief Macro for @b stack_descriptor verification.
  * Return @b EINVAL from errno.h and prints err message to @b LOG_FILE if @b stack_descriptor is invalid.
@@ -57,6 +61,7 @@ extern FILE *LOG_FILE; ///< Log file from log.cpp.
                                                             \
                                                             return EINVAL; \
                                                         }
+
 /**
  * @brief Macro for @b Stack, stack @b data and @b stack_descriptro verification.
  */
@@ -69,6 +74,20 @@ extern FILE *LOG_FILE; ///< Log file from log.cpp.
  */
 #define HASH_STACK(stk_adr) stk_adr->data_hash  = poly_hash_data (stk_adr); \
                             stk_adr->stack_hash = poly_hash_stack(stk_adr)
+
+/**
+ * @brief Macro for stack @b data expansion.
+ *
+ */
+#define REALOC_DATA_UP(stack_ptr) (elem_t *)((canary_t *)realloc(((canary_t *)stack_ptr->data) - 1, \
+                                   sizeof(elem_t) * (stack_ptr->capacity *= 2) + 2 * sizeof(canary_t)) + 1)
+
+/**
+ * @brief Macro for stack @b data shrink.
+*/
+#define REALOC_DATA_DOWN(stack_ptr) (elem_t *)((canary_t *)realloc(((canary_t *)stack_ptr->data) - 1, \
+                                   sizeof(elem_t) * (stack_ptr->capacity /= 2) + 2 * sizeof(canary_t)) + 1)
+
 #else
 
 #define STACK_VERIFICATION(...)
@@ -80,6 +99,10 @@ extern FILE *LOG_FILE; ///< Log file from log.cpp.
 #define VERIFICATION(...)
 
 #define HASH_STACK(...)
+
+#define REALOC_DATA_UP(stack_ptr) (elem_t *)realloc(stack_ptr->data, sizeof(elem_t) * (stack_ptr->capacity *= 2))
+
+#define REALOC_DATA_DOWN(stack_ptr) (elem_t *)realloc(stack_ptr->data, sizeof(elem_t) * (stack_ptr->capacity /= 2))
 
 #endif
 /**
@@ -140,7 +163,7 @@ int optimal_shrink(const stk_d stack_descriptor);
  */
 int stack_dump(const stk_d stack_descriptor, const char *stack_name, const char *file_name, const char * func_declaration, const int line);
 
-#ifndef NDEBUG
+#ifdef PROTECT
 /**
  * @brief Fuction for @b stack correction check.
  * Fills @b Err fields in @b stack if somethinf wrong.
