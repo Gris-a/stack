@@ -1,9 +1,3 @@
-/**
- * @file main.cpp
- * @author GraY
- * @brief Main file.
- */
-
 #include "../include/stack.h"
 #include <stdio.h>
 

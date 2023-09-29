@@ -12,7 +12,7 @@
 
 static const unsigned long long P = 257;
 
-size_t poly_hash_data(Stack *stack)
+size_t poly_hash_data(Stack *stack) //bad hash
 {
     assert(stack != NULL);
 
