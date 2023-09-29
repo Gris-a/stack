@@ -27,24 +27,26 @@ extern FILE *LOG_FILE; ///< Log file from log.cpp.
  * @brief Macro for @b stack verification.
  * Return err-code and prints @b format_str with @b __VA_ARGS__ parametres to @b LOG_FILE on stack incorrection.
  */
-#define STACK_VERIFICATION(stack_ptr, err_code, format_str, ...) stack_validation(stack_ptr); \
-                                                                 if((stack_ptr)->err.invalid) \
-                                                                 { \
-                                                                  fprintf(LOG_FILE, format_str, __VA_ARGS__); \
-                                                                  return err_code; \
-                                                                 }
+#define STACK_VERIFICATION(Stacks, stack_descriptor, err_code, format_str, ...) stack_validation(Stacks + stack_descriptor); \
+                                                                                if((Stacks + stack_descriptor)->err.invalid) \
+                                                                                { \
+                                                                                   fprintf(LOG_FILE, format_str, __VA_ARGS__); \
+                                                                                   STACK_DUMP(stack_descriptor); \
+                                                                                   return err_code; \
+                                                                                }
 
 /**
  * @brief Macro for stack @b data verification.
  * Return @b EINVAL from errno.h and prints err message to @b LOG_FILE if data is corrupted.
  */
-#define STACK_DATA_VERIFICATION(stack_ptr) stack_data_validation(stack_ptr); \
-                                           if((stack_ptr)->err.invalid) \
-                                           { \
-                                               fprintf(LOG_FILE, "%s: In %s:%d: error: Corrupted stack data.\n", \
-                                                       __FILE__, __PRETTY_FUNCTION__, __LINE__); \
-                                               return EINVAL; \
-                                           }
+#define STACK_DATA_VERIFICATION(Stacks, stack_descriptor) stack_data_validation(Stacks + stack_descriptor); \
+                                                          if((Stacks + stack_descriptor)->err.invalid) \
+                                                          { \
+                                                               fprintf(LOG_FILE, "%s: In %s:%d: error: Corrupted stack data.\n", \
+                                                                       __FILE__, __PRETTY_FUNCTION__, __LINE__); \
+                                                               STACK_DUMP(stack_descriptor); \
+                                                               return EINVAL; \
+                                                          }
 /**
  * @brief Macro for @b stack_descriptor verification.
  * Return @b EINVAL from errno.h and prints err message to @b LOG_FILE if @b stack_descriptor is invalid.
@@ -58,9 +60,9 @@ extern FILE *LOG_FILE; ///< Log file from log.cpp.
 /**
  * @brief Macro for @b Stack, stack @b data and @b stack_descriptro verification.
  */
-#define VERIFICATION(stack_descriptor, stack_ptr, ...) STACK_DESCRIPTOR_VERIFICATION(stack_descriptor); \
-                                                       STACK_VERIFICATION(stack_ptr, __VA_ARGS__); \
-                                                       STACK_DATA_VERIFICATION(stack_ptr); \
+#define VERIFICATION(Stacks, stack_descriptor, ...) STACK_DESCRIPTOR_VERIFICATION(stack_descriptor); \
+                                                    STACK_VERIFICATION(Stacks, stack_descriptor, __VA_ARGS__); \
+                                                    STACK_DATA_VERIFICATION(Stacks, stack_descriptor); \
 
 /**
  * @brief Macro for @b stack and it`s @b data hashing.

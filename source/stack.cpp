@@ -17,7 +17,7 @@ struct Stack Stacks[Max_stacks] = {}; //static
 
 int stack_ctor(stk_d *stack_descriptor, const size_t capacity)
 {
-    static size_t Stack_N = 1;
+    static size_t Stack_D = 1;
 
     assert(Stacks);
     assert(stack_descriptor);
@@ -31,7 +31,7 @@ int stack_ctor(stk_d *stack_descriptor, const size_t capacity)
         return EINVAL;
     }
 
-    if(Stack_N >= Max_stacks)
+    if(Stack_D >= Max_stacks)
     {
         fprintf(LOG_FILE, "%s: In %s: error: Max stacks limit reached.\n", __FILE__, __PRETTY_FUNCTION__);
 
@@ -39,7 +39,7 @@ int stack_ctor(stk_d *stack_descriptor, const size_t capacity)
     }
 
     N_buffered_stacks++;
-    struct Stack *stack = Stacks + Stack_N;
+    struct Stack *stack = Stacks + Stack_D;
 
     stack->capacity = capacity;
 
@@ -51,19 +51,19 @@ int stack_ctor(stk_d *stack_descriptor, const size_t capacity)
 
     HASH_STACK(stack);
 
-    STACK_VERIFICATION(stack, ENOMEM, "%s: In %s:%d: error: Unable to allocate memory.\n", __FILE__, __PRETTY_FUNCTION__, __LINE__ - 2);
+    STACK_VERIFICATION(Stacks, Stack_D, ENOMEM, "%s: In %s:%d: error: Unable to allocate memory.\n", __FILE__, __PRETTY_FUNCTION__, __LINE__ - 2);
 
     ((canary_t *)stack->data)[-1]                = Canary_val;
     *(canary_t *)(stack->data + stack->capacity) = Canary_val;
 
-    STACK_DATA_VERIFICATION(stack);
+    STACK_DATA_VERIFICATION(Stacks, Stack_D);
 
     #else
     stack->data = (elem_t *)calloc(capacity * sizeof(elem_t), sizeof(char));
     #endif
 
-    *stack_descriptor = Stack_N;
-    Stack_N++;
+    *stack_descriptor = Stack_D;
+    Stack_D++;
 
     return EXIT_SUCCESS;
 }
@@ -103,8 +103,8 @@ int push_stack(const stk_d stack_descriptor, const elem_t val)
 {
     struct Stack *stack = Stacks + stack_descriptor;
 
-    VERIFICATION(stack_descriptor, stack, EINVAL, "Error: invalid stack.\n"
-                                                  "%s: In function %s:%d\n", __FILE__, __PRETTY_FUNCTION__, __LINE__ - 1);
+    VERIFICATION(Stacks, stack_descriptor, EINVAL, "Error: invalid stack.\n"
+                                                   "%s: In function %s:%d\n", __FILE__, __PRETTY_FUNCTION__, __LINE__ - 1);
 
     int err_code = 0;
     if((err_code = optimal_expansion(stack_descriptor)))
@@ -118,8 +118,8 @@ int push_stack(const stk_d stack_descriptor, const elem_t val)
 
     HASH_STACK(stack);
 
-    VERIFICATION(stack_descriptor, stack, EINVAL, "Error: invalid stack.\n"
-                                                  "%s: In function %s:%d\n", __FILE__, __PRETTY_FUNCTION__, __LINE__ - 1);
+    VERIFICATION(Stacks, stack_descriptor, EINVAL, "Error: invalid stack.\n"
+                                                   "%s: In function %s:%d\n", __FILE__, __PRETTY_FUNCTION__, __LINE__ - 1);
 
     return EXIT_SUCCESS;
 }
@@ -128,8 +128,8 @@ int pop_stack(const stk_d stack_descriptor, elem_t *ret_val)
 {
     struct Stack *stack = Stacks + stack_descriptor;
 
-    VERIFICATION(stack_descriptor, stack, EINVAL, "Error: invalid stack.\n"
-                                                  "%s: In function %s:%d\n", __FILE__, __PRETTY_FUNCTION__, __LINE__ - 1);
+    VERIFICATION(Stacks, stack_descriptor, EINVAL, "Error: invalid stack.\n"
+                                                   "%s: In function %s:%d\n", __FILE__, __PRETTY_FUNCTION__, __LINE__ - 1);
 
     if(stack->size == 0)
     {
@@ -142,6 +142,7 @@ int pop_stack(const stk_d stack_descriptor, elem_t *ret_val)
         #endif
 
         HASH_STACK(stack);
+        STACK_DUMP(stack_descriptor);
 
         return EINVAL;
     }
@@ -161,8 +162,8 @@ int pop_stack(const stk_d stack_descriptor, elem_t *ret_val)
         return err_code;
     }
 
-    VERIFICATION(stack_descriptor, stack, EINVAL, "Error: invalid stack.\n"
-                                                  "%s: In function %s:%d\n", __FILE__, __PRETTY_FUNCTION__, __LINE__ - 1);
+    VERIFICATION(Stacks, stack_descriptor, EINVAL, "Error: invalid stack.\n"
+                                                   "%s: In function %s:%d\n", __FILE__, __PRETTY_FUNCTION__, __LINE__ - 1);
 
     return EXIT_SUCCESS;
 }
@@ -171,8 +172,8 @@ int optimal_expansion(const stk_d stack_descriptor)
 {
     struct Stack *stack = Stacks + stack_descriptor;
 
-    VERIFICATION(stack_descriptor, stack, EINVAL, "Error: invalid stack.\n"
-                                                  "%s: In function %s:%d\n", __FILE__, __PRETTY_FUNCTION__, __LINE__ - 1);
+    VERIFICATION(Stacks, stack_descriptor, EINVAL, "Error: invalid stack.\n"
+                                                   "%s: In function %s:%d\n", __FILE__, __PRETTY_FUNCTION__, __LINE__ - 1);
 
     if(stack->size == stack->capacity)
     {
@@ -187,6 +188,8 @@ int optimal_expansion(const stk_d stack_descriptor)
         {
             fprintf(LOG_FILE, "Error: unable to reallocate memory.\n"
                               "%s: In function %s:%d\n", __FILE__, __PRETTY_FUNCTION__, __LINE__ - 10);
+
+            STACK_DUMP(stack_descriptor);
 
             return ENOMEM;
         }
@@ -205,8 +208,8 @@ int optimal_expansion(const stk_d stack_descriptor)
         HASH_STACK(stack);
     }
 
-    VERIFICATION(stack_descriptor, stack, EINVAL, "Error: invalid stack.\n"
-                                                  "%s: In function %s:%d\n", __FILE__, __PRETTY_FUNCTION__, __LINE__ - 1);
+    VERIFICATION(Stacks, stack_descriptor, EINVAL, "Error: invalid stack.\n"
+                                                   "%s: In function %s:%d\n", __FILE__, __PRETTY_FUNCTION__, __LINE__ - 1);
 
     return EXIT_SUCCESS;
 }
@@ -215,8 +218,8 @@ int optimal_shrink(const stk_d stack_descriptor)
 {
     struct Stack *stack = Stacks + stack_descriptor;
 
-    VERIFICATION(stack_descriptor, stack, EINVAL, "Error: invalid stack.\n"
-                                                  "%s: In function %s:%d\n", __FILE__, __PRETTY_FUNCTION__, __LINE__ - 1);
+    VERIFICATION(Stacks, stack_descriptor, EINVAL, "Error: invalid stack.\n"
+                                                   "%s: In function %s:%d\n", __FILE__, __PRETTY_FUNCTION__, __LINE__ - 1);
 
     if(stack->size * 4 == stack->capacity)
     {
@@ -232,6 +235,8 @@ int optimal_shrink(const stk_d stack_descriptor)
             fprintf(LOG_FILE, "Error: unable to reallocate memory.\n"
                               "%s: In function %s:%d\n", __FILE__, __PRETTY_FUNCTION__, __LINE__ - 10);
 
+            STACK_DUMP(stack_descriptor);
+
             return ENOMEM;
         }
 
@@ -244,25 +249,25 @@ int optimal_shrink(const stk_d stack_descriptor)
         HASH_STACK(stack);
     }
 
-    VERIFICATION(stack_descriptor, stack, EINVAL, "Error: invalid stack.\n"
-                                                  "%s: In function %s:%d\n", __FILE__, __PRETTY_FUNCTION__, __LINE__ - 1);
+    VERIFICATION(Stacks, stack_descriptor, EINVAL, "Error: invalid stack.\n"
+                                                   "%s: In function %s:%d\n", __FILE__, __PRETTY_FUNCTION__, __LINE__ - 1);
 
     return EXIT_SUCCESS;
 }
 
-int stack_dump(const stk_d stack_descriptor, const char *stack_name, const char *file_name, const char * func_declaration, const int line)
+int stack_dump(const stk_d stack_descriptor, const char *Stack_Name, const char *file_name, const char * func_declaration, const int line)
 {
     struct Stack *stack = Stacks + stack_descriptor;
 
     STACK_DESCRIPTOR_VERIFICATION(stack_descriptor);
 
     assert(stack);
-    assert(stack_name);
+    assert(Stack_Name);
     assert(file_name);
     assert(func_declaration);
 
     fprintf(LOG_FILE, "Stack[%p] \"%s\" from %s\n"
-                      "In function %s:%d\n", stack, stack_name, file_name, func_declaration, line);
+                      "In function %s:%d\n", stack, Stack_Name, file_name, func_declaration, line);
     #ifndef NDEBUG
     fprintf(LOG_FILE, "{                     \n"
                       "\tcanary_left = %#llx;\n"
