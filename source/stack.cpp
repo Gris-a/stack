@@ -177,7 +177,7 @@ int optimal_expansion(const stk_d stack_descriptor)
 
     if(stack->size == stack->capacity)
     {
-        elem_t *temp_ptr = REALOC_DATA_UP(stack);
+        elem_t *temp_ptr = REALLOC_DATA_UP(stack, 2);
 
         if(!temp_ptr)
         {
@@ -218,7 +218,7 @@ int optimal_shrink(const stk_d stack_descriptor)
 
     if(stack->size * 4 == stack->capacity)
     {
-        elem_t *temp_ptr = REALOC_DATA_DOWN(stack);
+        elem_t *temp_ptr = REALLOC_DATA_DOWN(stack, 2);
 
         if(!temp_ptr)
         {

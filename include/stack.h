@@ -76,17 +76,17 @@ extern FILE *LOG_FILE; ///< Log file from log.cpp.
                             stk_adr->stack_hash = poly_hash_stack(stk_adr)
 
 /**
- * @brief Macro for stack @b data expansion.
+ * @brief Macro for stack @b data expansion in @b times times.
  *
  */
-#define REALOC_DATA_UP(stack_ptr) (elem_t *)((canary_t *)realloc(((canary_t *)stack_ptr->data) - 1, \
-                                   sizeof(elem_t) * (stack_ptr->capacity *= 2) + 2 * sizeof(canary_t)) + 1)
+#define REALLOC_DATA_UP(stack_ptr, times) (elem_t *)((canary_t *)realloc(((canary_t *)stack_ptr->data) - 1, \
+                                           sizeof(elem_t) * (stack_ptr->capacity *= times) + 2 * sizeof(canary_t)) + 1)
 
 /**
- * @brief Macro for stack @b data shrink.
+ * @brief Macro for stack @b data shrinking in @b times times.
 */
-#define REALOC_DATA_DOWN(stack_ptr) (elem_t *)((canary_t *)realloc(((canary_t *)stack_ptr->data) - 1, \
-                                   sizeof(elem_t) * (stack_ptr->capacity /= 2) + 2 * sizeof(canary_t)) + 1)
+#define REALLOC_DATA_DOWN(stack_ptr, times) (elem_t *)((canary_t *)realloc(((canary_t *)stack_ptr->data) - 1, \
+                                             sizeof(elem_t) * (stack_ptr->capacity /= times) + 2 * sizeof(canary_t)) + 1)
 
 #else
 
@@ -100,9 +100,9 @@ extern FILE *LOG_FILE; ///< Log file from log.cpp.
 
 #define HASH_STACK(...)
 
-#define REALOC_DATA_UP(stack_ptr) (elem_t *)realloc(stack_ptr->data, sizeof(elem_t) * (stack_ptr->capacity *= 2))
+#define REALLOC_DATA_UP(stack_ptr, times) (elem_t *)realloc(stack_ptr->data, sizeof(elem_t) * (stack_ptr->capacity *= times))
 
-#define REALOC_DATA_DOWN(stack_ptr) (elem_t *)realloc(stack_ptr->data, sizeof(elem_t) * (stack_ptr->capacity /= 2))
+#define REALLOC_DATA_DOWN(stack_ptr, times) (elem_t *)realloc(stack_ptr->data, sizeof(elem_t) * (stack_ptr->capacity /= times))
 
 #endif
 /**
