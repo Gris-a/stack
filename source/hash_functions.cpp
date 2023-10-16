@@ -8,9 +8,10 @@
 #include <stddef.h>
 
 #include "../include/hash_functions.h"
-#include "../include/stack.h"
 
 static const unsigned long long P = 257;
+
+#ifdef PROTECT
 
 size_t poly_hash_data(Stack *stack) //bad hash
 {
@@ -24,9 +25,9 @@ size_t poly_hash_data(Stack *stack) //bad hash
     size_t hash      = 0;
     size_t powered_P = 1;
 
-    for(size_t i = 0; i < stack->capacity; i++)
+    for(size_t i = 0; i < stack->capacity * sizeof(elem_t); i++)
     {
-        hash      += (size_t)stack->data[i] * powered_P;
+        hash      += (size_t)((char *)stack->data)[i] * powered_P;
         powered_P *= P;
     }
 
@@ -53,3 +54,5 @@ size_t poly_hash_stack(Stack *stack)
 
     return hash_val;
 }
+
+#endif

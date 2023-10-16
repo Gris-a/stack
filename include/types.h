@@ -1,6 +1,8 @@
 #ifndef TYPES_H
 #define TYPES_H
 
+#define PROTECT
+
 /**
  * @file types.h
  * @author GraY
@@ -11,8 +13,11 @@
 
 typedef size_t stk_d;                ///< Type define for @b stack descriptor.
 typedef long long elem_t;            ///< Type define for elements of @b Stack data.
-typedef unsigned long long canary_t; ///< Type define for @b Canary value.
+#define ETS "%lld"
 
+#ifdef PROTECT
+
+typedef unsigned long long canary_t; ///< Type define for @b Canary value.
 const canary_t Canary_val = 0xB1BAB0BA; ///< Canary value for canary protection.
 
 /**
@@ -28,12 +33,14 @@ struct Err
     unsigned int underflow:1;
 };
 
+#endif
+
 /**
  * @brief Stack structure.
  */
 struct Stack
 {
-    #ifndef NDEBUG
+    #ifdef PROTECT
     canary_t canary_left;  ///< Left @b Canary for canary protection. Field doesn`t creates if defined @b NDEBUG.
     #endif
 
@@ -42,7 +49,7 @@ struct Stack
 
     elem_t *data;          ///< @b Stack data.
 
-    #ifndef NDEBUG
+    #ifdef PROTECT
     size_t stack_hash;     ///< Hashed @b Stack value. Field doesn`t creates if defined @b NDEBUG.
     size_t data_hash;      ///< Hashed @b Stack data. Field doesn`t creates if defined @b NDEBUG.
 
