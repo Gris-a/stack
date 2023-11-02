@@ -1,3 +1,5 @@
+#define LOG_CPP
+
 /**
  * @file log.cpp
  * @author GraY
@@ -7,21 +9,24 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "../include/log.h"
+#include "../includelog.h"
 
 FILE *LOG_FILE = open_log();
 
 FILE *open_log(void)
 {
-    atexit(close_log);
-
-    FILE *file = fopen("stack.log", "w");
+    FILE *file = fopen("log.log", "w");
     if(file == NULL)
     {
-        printf("Can`t open log-file.\n");
+        fprintf(stderr, "Can`t open log-file.\n"
+                        "Using stderr insead.\n");
 
-        return stdout;
+        return stderr;
     }
+
+    atexit(close_log);
+
+    setbuf(file, NULL);
 
     return file;
 }
@@ -29,5 +34,8 @@ FILE *open_log(void)
 void close_log(void)
 {
     fflush(LOG_FILE);
+
     fclose(LOG_FILE);
 }
+
+#undef LOG_CPP
