@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "../includelog.h"
+#include "../include/log.h"
 
 FILE *LOG_FILE = open_log();
 
