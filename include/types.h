@@ -55,7 +55,7 @@ struct Stack
 
     struct Err err;        ///< Errors bit-field.
 
-    canary_t canary_right; ///< Right @b Canary for canary protection. Field doesn`t creates if defined @b NDEBUG.
+    canary_t canary_right; ///< Right @b Canary for canary protection.
     #endif
 };
 
