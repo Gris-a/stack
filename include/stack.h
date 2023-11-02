@@ -7,7 +7,6 @@
  * @brief Functions and macros for working with the stack.
  */
 
-
 #include <errno.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -22,8 +21,6 @@ extern FILE *LOG_FILE; ///< Log file from log.cpp.
 #define STACK_DUMP(stk_descriptor) stack_dump(stk_descriptor, #stk_descriptor, __FILE__, __PRETTY_FUNCTION__, __LINE__)
 
 #ifdef PROTECT
-#include "../include/hash_functions.h"
-
 /**
  * @brief Macro for @b stack verification.
  * Return err-code and prints @b format_str with @b __VA_ARGS__ parametres to @b LOG_FILE on stack incorrection.
@@ -35,7 +32,6 @@ extern FILE *LOG_FILE; ///< Log file from log.cpp.
                                                                             \
                                                                             return err_code; \
                                                                         }
-
 /**
  * @brief Macro for stack @b data verification.
  * Return @b EINVAL from errno.h and prints err message to @b LOG_FILE if data is corrupted.
@@ -48,7 +44,6 @@ extern FILE *LOG_FILE; ///< Log file from log.cpp.
                                                           \
                                                           return EINVAL; \
                                                     }
-
 /**
  * @brief Macro for @b stack_descriptor verification.
  * Return @b EINVAL from errno.h and prints err message to @b LOG_FILE if @b stack_descriptor is invalid.
@@ -59,49 +54,57 @@ extern FILE *LOG_FILE; ///< Log file from log.cpp.
                                                             \
                                                             return EINVAL; \
                                                         }
-
 /**
- * @brief Macro for @b Stack, stack @b data and @b stack_descriptro verification.
+ * @brief Macro for @b Stack, stack @b data and @b stack_descriptror verification.
  */
 #define VERIFICATION(stack_descriptor, ...) STACK_DESCRIPTOR_VERIFICATION(stack_descriptor); \
                                             STACK_VERIFICATION(stack_descriptor, __VA_ARGS__); \
                                             STACK_DATA_VERIFICATION(stack_descriptor);
-
-/**
- * @brief Macro for @b stack and it`s @b data hashing.
- */
-#define HASH_STACK(stk_adr) stk_adr->data_hash  = poly_hash_data (stk_adr); \
-                            stk_adr->stack_hash = poly_hash_stack(stk_adr)
-
-/**
- * @brief Macro for stack @b data expansion in @b times times.
- *
- */
-#define REALLOC_DATA_UP(stack_ptr, times) (elem_t *)((canary_t *)realloc(((canary_t *)stack_ptr->data) - 1, \
-                                           sizeof(elem_t) * (stack_ptr->capacity *= times) + 2 * sizeof(canary_t)) + 1)
-
-/**
- * @brief Macro for stack @b data shrinking in @b times times.
-*/
-#define REALLOC_DATA_DOWN(stack_ptr, times) (elem_t *)((canary_t *)realloc(((canary_t *)stack_ptr->data) - 1, \
-                                             sizeof(elem_t) * (stack_ptr->capacity /= times) + 2 * sizeof(canary_t)) + 1)
-
 #else
 
 #define STACK_VERIFICATION(...)
 
 #define STACK_DATA_VERIFICATION(...)
 
-#define STACK_DESCRIPTOR_VERIFICATION(stack_descriptor)
+#define STACK_DESCRIPTOR_VERIFICATION(...)
 
 #define VERIFICATION(...)
 
+#endif
+
+#ifdef PROTECT
+
+#include "hash_functions.h"
+/**
+ * @brief Macro for @b stack and it`s @b data hashing.
+ */
+#define HASH_STACK(stk_adr) stk_adr->data_hash  = poly_hash_data (stk_adr); \
+                            stk_adr->stack_hash = poly_hash_stack(stk_adr)
+#else
+
 #define HASH_STACK(...)
 
-#define REALLOC_DATA_UP(stack_ptr, times) (elem_t *)realloc(stack_ptr->data, sizeof(elem_t) * (stack_ptr->capacity *= times))
+#endif
 
-#define REALLOC_DATA_DOWN(stack_ptr, times) (elem_t *)realloc(stack_ptr->data, sizeof(elem_t) * (stack_ptr->capacity /= times))
+#ifdef PROTECT
+/**
+ * @brief Macro for stack @b data expansion in @b times times.
+ *
+ */
+#define REALLOC_DATA_UP(stack_ptr, times) (elem_t *)((canary_t *)realloc(((canary_t *)stack_ptr->data) - 1, \
+                                           sizeof(elem_t) * (stack_ptr->capacity *= times) + 2 * sizeof(canary_t)) + 1)
+/**
+ * @brief Macro for stack @b data shrinking in @b times times.
+*/
+#define REALLOC_DATA_DOWN(stack_ptr, times) (elem_t *)((canary_t *)realloc(((canary_t *)stack_ptr->data) - 1, \
+                                             sizeof(elem_t) * (stack_ptr->capacity /= times) + 2 * sizeof(canary_t)) + 1)
+#else
 
+#define REALLOC_DATA_UP(stack_ptr, times) (elem_t *)realloc(stack_ptr->data, \
+                                           sizeof(elem_t) * (stack_ptr->capacity *= times))
+
+#define REALLOC_DATA_DOWN(stack_ptr, times) (elem_t *)realloc(stack_ptr->data, \
+                                             sizeof(elem_t) * (stack_ptr->capacity /= times))
 #endif
 /**
  * @brief @b Stack constructor.
@@ -149,7 +152,11 @@ int optimal_expansion(const stk_d stack_descriptor);
  */
 int optimal_shrink(const stk_d stack_descriptor);
 
-
+/**
+ * @brief Function that clears @b stack and fills it with @b 0.
+ * @param stack_descriptor Stack descriptor.
+ * @return int Error code.
+ */
 int clear_stack(const stk_d stack_descriptor);
 
 /**
@@ -164,15 +171,33 @@ int clear_stack(const stk_d stack_descriptor);
  */
 int stack_dump(const stk_d stack_descriptor, const char *stack_name, const char *file_name, const char * func_declaration, const int line);
 
-
+/**
+ * @brief Function that returns copy of @b stack without @b data
+ * @param stack_descriptor Stack descriptor.
+ * @return struct Stack @b copy of @b stack.
+ */
 struct Stack stack_info(const stk_d stack_descriptor);
 
 #ifdef PROTECT
+/**
+ * @brief Macro for @b stack_descriptor verification.
+ * @param stack_descriptor Stack descriptor.
+ * @return int Err code.
+ */
 int stack_descriptor_validation(const stk_d stack_descriptor);
 
+/**
+ * @brief Macro for @b stack verification. Fills @b err bit-field.
+ * @param stack_descriptor Stack descriptor.
+ */
 void stack_validation(const stk_d stack_descriptor);
 
+/**
+ * @brief Macro for @b stack verification. Fills @b err bit-field.
+ * @param stack_descriptor Stack descriptor.
+ */
 void stack_data_validation(const stk_d stack_descriptor);
+
 #endif
 
 #endif //STACK_H
