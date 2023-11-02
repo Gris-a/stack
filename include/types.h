@@ -41,7 +41,7 @@ struct Err
 struct Stack
 {
     #ifdef PROTECT
-    canary_t canary_left;  ///< Left @b Canary for canary protection. Field doesn`t creates if defined @b NDEBUG.
+    canary_t canary_left;  ///< Left @b Canary for canary protection.
     #endif
 
     size_t size;           ///< Number of elements in @b Stack data.
@@ -50,10 +50,10 @@ struct Stack
     elem_t *data;          ///< @b Stack data.
 
     #ifdef PROTECT
-    size_t stack_hash;     ///< Hashed @b Stack value. Field doesn`t creates if defined @b NDEBUG.
-    size_t data_hash;      ///< Hashed @b Stack data. Field doesn`t creates if defined @b NDEBUG.
+    size_t stack_hash;     ///< Hashed @b Stack value.
+    size_t data_hash;      ///< Hashed @b Stack data.
 
-    struct Err err;        ///< Errors bit-field. Field doesn`t creates if defined @b NDEBUG.
+    struct Err err;        ///< Errors bit-field.
 
     canary_t canary_right; ///< Right @b Canary for canary protection. Field doesn`t creates if defined @b NDEBUG.
     #endif
