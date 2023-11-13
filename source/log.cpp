@@ -1,11 +1,5 @@
 #define LOG_CPP
 
-/**
- * @file log.cpp
- * @author GraY
- * @brief Logging functions and globals definitions.
- */
-
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -15,7 +9,7 @@ FILE *LOG_FILE = open_log();
 
 FILE *open_log(void)
 {
-    FILE *file = fopen("log.log", "w");
+    FILE *file = fopen("log.log", "wb");
     if(file == NULL)
     {
         fprintf(stderr, "Can`t open log-file.\n"
